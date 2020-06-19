@@ -94,6 +94,7 @@ def k_shortest_paths(G, source, target, k=1, weight='dur'):
     return A
 
 
+# k-shortest paths algorithm in networkx
 def k_shortest_paths_nx(source, target, k, weight='dur'):
     return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
