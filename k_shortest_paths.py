@@ -2,14 +2,35 @@
 Yen's k shortest paths algorithm. The network is built on networkx.
 """
 
-import math
 import copy
+import time
+import pickle
 import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from itertools import islice
 
 with open('NYC_NET.pickle', 'rb') as f:
     NYC_NET = pickle.load(f)
-G = copy.deepcopy(NOD_NET)
+G = copy.deepcopy(NYC_NET)
+
+
+# # parameters for Manhattan map
+# map width and height (km)
+MAP_WIDTH = 10.71
+MAP_HEIGHT = 20.85
+# coordinates
+# (Olng, Olat) lower left corner
+Olng = -74.0300
+Olat = 40.6950
+# (Olng, Olat) upper right corner
+Dlng = -73.9030
+Dlat = 40.8825
+
+
+# return the travel time of edge (u, v)
+def get_edge_dur(u, v):
+    return NYC_NET.get_edge_data(u, v, default={'dur': None})['dur']
 
 
 # returns the k-shortest paths from source to target in a weighted graph G
@@ -30,7 +51,7 @@ def k_shortest_paths(G, source, target, k=1, weight='dur'):
             for u_i in range(len(root_path) - 1):
                 u = root_path[u_i]
                 v = root_path[u_i + 1]
-                root_path_duration += get_edge_real_dur(u, v)
+                root_path_duration += get_edge_dur(u, v)
 
             # print('root_path', root_path)
             # print('root_path_duration', root_path_duration)
@@ -44,7 +65,7 @@ def k_shortest_paths(G, source, target, k=1, weight='dur'):
                     v = curr_path[j + 1]
                     if G.has_edge(u, v):
                         G.remove_edge(u, v)
-                        edges_removed.append((u, v,get_edge_real_dur(u, v)))
+                        edges_removed.append((u, v,get_edge_dur(u, v)))
                         # print('u, v, edge_duration (remove)', u, v, edge_duration)
 
             # remove rootPathNode (except spurNode) from Graph
@@ -55,7 +76,7 @@ def k_shortest_paths(G, source, target, k=1, weight='dur'):
                 nodes = copy.deepcopy(G[u])
                 for v in nodes:
                     G.remove_edge(u, v)
-                    edges_removed.append((u, v, get_edge_real_dur(u, v)))
+                    edges_removed.append((u, v, get_edge_dur(u, v)))
                     # print('u, v, edge_duration (remove)', u, v, edge_duration)
                 # if G.is_directed():
                 #     # in-edges
@@ -91,15 +112,50 @@ def k_shortest_paths(G, source, target, k=1, weight='dur'):
         else:
             break
     A.sort(key=lambda p: p[0])
-    return A
+    KSP = []
+    for (dur, path) in A:
+        KSP.append(path)
+    return KSP
 
 
 # k-shortest paths algorithm in networkx
-def k_shortest_paths_nx(source, target, k, weight='dur'):
+def k_shortest_paths_nx(G, source, target, k, weight='dur'):
     return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
 
+def plot_path(onid, dnid, paths):
+    fig = plt.figure(figsize=(MAP_WIDTH, MAP_HEIGHT))
+    plt.xlim((Olng, Dlng))
+    plt.ylim((Olat, Dlat))
+    img = mpimg.imread('map.png')
+    plt.imshow(img, extent=[Olng, Dlng, Olat, Dlat], aspect=(Dlng - Olng) / (Dlat - Olat) * MAP_HEIGHT / MAP_WIDTH)
+    fig.subplots_adjust(left=0.00, bottom=0.00, right=1.00, top=1.00)
+    # [olng, olat] = G.nodes[onid]['pos']
+    # [dlng, dlat] = G.nodes[dnid]['pos']
+    # plt.scatter(olng, olat)
+    # plt.scatter(dlng, dlat)
+    for index, path in zip(range(len(paths)), paths):
+        x = []
+        y = []
+        for node in path:
+            [lng, lat] = NYC_NET.nodes[node]['pos']
+            x.append(lng)
+            y.append(lat)
+        if index == 0 or index == 1:
+            plt.plot(x, y, marker='.')
+        else:
+            plt.plot(x, y, '--')
+
+    plt.savefig('example.jpg', dpi=300)
+    plt.show()
 
 
-
+if __name__ == "__main__":
+    onid = 800
+    dnid = 2300
+    aa = time.time()
+    # KSP = k_shortest_paths(G, onid, dnid, 20, 'dur')
+    KSP1 = k_shortest_paths_nx(NYC_NET, onid, dnid, 20, 'dur')
+    print('find k shortest paths running time:', (time.time() - aa))
+    plot_path(onid, dnid, KSP1)
 
