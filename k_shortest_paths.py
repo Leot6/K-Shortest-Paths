@@ -130,10 +130,10 @@ def plot_path(onid, dnid, paths):
     img = mpimg.imread('map.png')
     plt.imshow(img, extent=[Olng, Dlng, Olat, Dlat], aspect=(Dlng - Olng) / (Dlat - Olat) * MAP_HEIGHT / MAP_WIDTH)
     fig.subplots_adjust(left=0.00, bottom=0.00, right=1.00, top=1.00)
-    # [olng, olat] = G.nodes[onid]['pos']
-    # [dlng, dlat] = G.nodes[dnid]['pos']
-    # plt.scatter(olng, olat)
-    # plt.scatter(dlng, dlat)
+    [olng, olat] = G.nodes[onid]['pos']
+    [dlng, dlat] = G.nodes[dnid]['pos']
+    plt.scatter(olng, olat, s=70, color='r', marker='^')
+    plt.scatter(dlng, dlat, s=70, color='r', marker='s')
     for index, path in zip(range(len(paths)), paths):
         x = []
         y = []
@@ -152,10 +152,10 @@ def plot_path(onid, dnid, paths):
 
 if __name__ == "__main__":
     onid = 800
-    dnid = 2300
+    dnid = 2800
     aa = time.time()
-    # KSP = k_shortest_paths(G, onid, dnid, 20, 'dur')
-    KSP1 = k_shortest_paths_nx(NYC_NET, onid, dnid, 20, 'dur')
+    # KSP = k_shortest_paths(G, onid, dnid, 1, 'dur')
+    KSP1 = k_shortest_paths_nx(NYC_NET, onid, dnid, 200, 'dur')
     print('find k shortest paths running time:', (time.time() - aa))
     plot_path(onid, dnid, KSP1)
 
